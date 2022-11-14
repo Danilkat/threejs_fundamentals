@@ -1,16 +1,18 @@
 import * as THREE from '../../node_modules/three/build/three.module.js';
 
+
+
 function main() {
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
 
-  const fov = 75;
+  const fov = 60;
   const aspect = 2;  // the canvas default
   const near = 0.1;
   const far = 5;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-  camera.position.z = 2;
+  camera.position.z = 2.5;
 
   const scene = new THREE.Scene();
 
@@ -19,11 +21,22 @@ function main() {
   const boxDepth = 1;
   const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-  const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
+  function makeInstance(geometry, color, x) {
+    const material = new THREE.MeshPhongMaterial({color});
+    
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+    
+    cube.position.x = x;
+  
+    return cube;
+  }
 
-  const cube = new THREE.Mesh(geometry, material);
-
-  scene.add(cube);
+  const cubes = [
+    makeInstance(geometry, 0x44aa88, 0),
+    makeInstance(geometry, 0x8844aa, -2),
+    makeInstance(geometry, 0xaa8844, 2),
+  ];
 
   const color = 0xFFFFFF;
   const intensity = 1;
@@ -34,8 +47,12 @@ function main() {
   function render(time) {
     time *= 0.001;
   
-    cube.rotation.x = time;
-    cube.rotation.y = time;
+    cubes.forEach((cube, i) => {
+      const speed = 1 + i * .1;
+      const rot = time * speed;
+      cube.rotation.x = rot;
+      cube.rotation.y = rot;
+    })
   
     renderer.render(scene, camera);
   
