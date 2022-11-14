@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "split.js": "^1.6.5",
     "three": "^0.146.0"
   }
 }
