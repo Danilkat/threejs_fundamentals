@@ -32,24 +32,45 @@ function main() {
   
   const sphereGeometry = new THREE.SphereGeometry(1, 6, 6);
 
+  
+  //Space bodies
   const sunMaterial = new THREE.MeshPhongMaterial({emissive: 0xFFFF00});
   const sunMesh = new THREE.Mesh(sphereGeometry, sunMaterial);
   sunMesh.scale.set(5, 5, 5);
-  scene.add(sunMesh);
   objects.push(sunMesh);
 
   const earthMaterial = new THREE.MeshPhongMaterial({color: 0x2233FF, emissive: 0x112244});
   const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
-  earthMesh.position.x = 10;
-  scene.add(earthMesh);
   objects.push(earthMesh);
 
   const moonMaterial = new THREE.MeshPhongMaterial({color: 0x888888, emissive: 0x222222});
   const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
-  moonMesh.position.x = 15;
   moonMesh.scale.set(.5, .5, .5);
-  scene.add(moonMesh);
   objects.push(moonMesh);
+
+
+  // Orbits
+  const solarSystem = new THREE.Object3D();
+  scene.add(solarSystem);
+  objects.push(solarSystem);
+
+  const earthOrbit = new THREE.Object3D();
+  earthOrbit.position.x = 10;
+  objects.push(earthOrbit);
+  
+  const moonOrbit = new THREE.Object3D();
+  moonOrbit.position.x = 2;
+
+
+  //Child assignations
+  solarSystem.add(sunMesh);
+  solarSystem.add(earthOrbit);
+
+  earthOrbit.add(earthMesh);
+  earthOrbit.add(moonOrbit);
+
+  moonOrbit.add(moonMesh);
+
 
   const color = 0xFFFFFF;
   const intensity = 3;
