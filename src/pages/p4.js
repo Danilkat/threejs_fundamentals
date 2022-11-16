@@ -38,6 +38,13 @@ function main() {
   scene.add(sunMesh);
   objects.push(sunMesh);
 
+  const moonMaterial = new THREE.MeshPhongMaterial({color: 0x888888, emissive: 0x222222});
+  const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
+  moonMesh.position.x = 2;
+  sunMesh.scale.set(.5, .5, .5);
+  scene.add(moonMesh);
+  objects.push(moonMesh);
+
   const color = 0xFFFFFF;
   const intensity = 3;
   const light = new THREE.PointLight(color, intensity);
