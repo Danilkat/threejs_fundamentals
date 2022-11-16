@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dat.gui": "^0.7.9",
     "split.js": "^1.6.5",
     "three": "^0.146.0"
   }

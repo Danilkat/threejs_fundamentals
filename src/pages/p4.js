@@ -1,4 +1,5 @@
 import * as THREE from '../../node_modules/three/build/three.module.js';
+import * as dat from '../../node_modules/dat.gui/build/dat.gui.module.js';
 
 function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
@@ -12,9 +13,36 @@ function resizeRendererToDisplaySize(renderer) {
   return needResize;
 }
 
+class AxisGridHelper {
+  constructor(node, units = 10) {
+    const axes = new THREE.AxesHelper();
+    axes.material.depthTest = false;
+    axes.renderOrder = 2;  // after the grid
+    node.add(axes);
+ 
+    const grid = new THREE.GridHelper(units, units);
+    grid.material.depthTest = false;
+    grid.renderOrder = 1;
+    node.add(grid);
+ 
+    this.grid = grid;
+    this.axes = axes;
+    this.visible = false;
+  }
+  get visible() {
+    return this._visible;
+  }
+  set visible(v) {
+    this._visible = v;
+    this.grid.visible = v;
+    this.axes.visible = v;
+  }
+}
+
 function main() {
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
+  const gui = new dat.GUI();
 
   const fov = 40;
   const aspect = 2;  // the canvas default
@@ -70,6 +98,17 @@ function main() {
   earthOrbit.add(moonOrbit);
 
   moonOrbit.add(moonMesh);
+
+  function makeAxisGrid(node, label, units) {
+    const helper = new AxisGridHelper(node, units);
+    gui.add(helper, 'visible').name(label);
+  }
+   
+  makeAxisGrid(solarSystem, 'solarSystem', 25);
+  makeAxisGrid(sunMesh, 'sunMesh');
+  makeAxisGrid(earthOrbit, 'earthOrbit');
+  makeAxisGrid(earthMesh, 'earthMesh');
+  makeAxisGrid(moonMesh, 'moonMesh');
 
 
   const color = 0xFFFFFF;
