@@ -1,4 +1,7 @@
-import * as THREE from '../../node_modules/three/build/three.module.js';
+import * as THREE from "https://cdn.skypack.dev/three@0.136.0";
+import {ParametricGeometry} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/ParametricGeometry";
+import {TextGeometry} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/TextGeometry";
+import {FontLoader} from "https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/FontLoader";
 
 function resizeRendererToDisplaySize(renderer) {
   const canvas = renderer.domElement;
@@ -68,6 +71,12 @@ function main() {
 
   function addSolidGeometry(x, y, geometry) {
     const mesh = new THREE.Mesh(geometry, createMaterial());
+    addObject(x, y, mesh);
+  }
+
+  function addLineGeometry(x, y, geometry) {
+    const material = new THREE.LineBasicMaterial({color: 0x000000});
+    const mesh = new THREE.LineSegments(geometry, material);
     addObject(x, y, mesh);
   }
 
@@ -161,7 +170,7 @@ function main() {
     
     const slices = 25;
     const stacks = 25;
-    addSolidGeometry(2, 1, new THREE.ParametricBufferGeometry(klein, slices, stacks));
+    addSolidGeometry(2, 1, new ParametricGeometry(klein, slices, stacks));
   }
   { //Plane
     const width = 9;
@@ -193,7 +202,7 @@ function main() {
     const segments = 18;
     addSolidGeometry(0, 0, new THREE.RingBufferGeometry(innerRadius, outerRadius, segments));
   }
-  { //Shape (2D outline)
+  { //Shape (by 2D outline)
     const shape = new THREE.Shape();
     const x = -2.5;
     const y = -5;
@@ -217,7 +226,7 @@ function main() {
     addSolidGeometry(-2, -1, new THREE.TetrahedronBufferGeometry(radius));
   }
   { //3D text
-    const loader = new THREE.FontLoader();
+    const loader = new FontLoader();
     // promisify font loading
     function loadFont(url) {
       return new Promise((resolve, reject) => {
@@ -236,7 +245,7 @@ function main() {
         bevelSize: .3,
         bevelSegments: 5,
       };
-      const geometry = new THREE.TextBufferGeometry('three.js', textSettings);
+      const geometry = new TextGeometry('three.js', textSettings);
       const mesh = new THREE.Mesh(geometry, createMaterial());
       geometry.computeBoundingBox();
       geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
@@ -285,7 +294,21 @@ function main() {
     const closed = false;
     addSolidGeometry(2, -1, new THREE.TubeBufferGeometry(path, tubularSegments, radius, radialSegments, closed));
   }
-
+  { //Edges (wireframe w/o triangles basically)
+    const width = 8;
+    const height = 8;
+    const depth = 8;
+    const thresholdAngle = 15;
+    addLineGeometry(-2, -2, new THREE.EdgesGeometry(
+        new THREE.BoxBufferGeometry(width, height, depth),
+        thresholdAngle));
+  }
+  { //Wireframe (all lines)
+    const width = 8;
+    const height = 8;
+    const depth = 8;
+    addLineGeometry(-1, -2, new THREE.WireframeGeometry(new THREE.BoxBufferGeometry(width, height, depth)));
+  }
 
   function render(time) {
     time *= 0.001;
@@ -296,7 +319,7 @@ function main() {
       camera.updateProjectionMatrix();
     }
   
-    cubes.forEach((cube, i) => {
+    objects.forEach((cube, i) => {
       const speed = 1 + i * .1;
       const rot = time * speed;
       cube.rotation.x = rot;
