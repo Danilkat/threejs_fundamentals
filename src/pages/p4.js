@@ -38,10 +38,16 @@ function main() {
   scene.add(sunMesh);
   objects.push(sunMesh);
 
+  const earthMaterial = new THREE.MeshPhongMaterial({color: 0x2233FF, emissive: 0x112244});
+  const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+  earthMesh.position.x = 10;
+  scene.add(earthMesh);
+  objects.push(earthMesh);
+
   const moonMaterial = new THREE.MeshPhongMaterial({color: 0x888888, emissive: 0x222222});
   const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
-  moonMesh.position.x = 2;
-  sunMesh.scale.set(.5, .5, .5);
+  moonMesh.position.x = 15;
+  moonMesh.scale.set(.5, .5, .5);
   scene.add(moonMesh);
   objects.push(moonMesh);
 
