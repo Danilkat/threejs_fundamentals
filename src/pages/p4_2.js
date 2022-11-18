@@ -117,14 +117,15 @@ function main() {
   scene.add(targetOrbit);
 
   const targetElevation = new THREE.Object3D();
-  targetElevation.position.z = 8;
+  targetElevation.position.z = 16;
   targetElevation.position.y = 8;
   targetOrbit.add(targetElevation);
 
   const targetBob = new THREE.Object3D();
   targetElevation.add(targetBob);
 
-  const targetMesh = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 6, 3), new THREE.MeshPhongMaterial({color: 0x00FF00, flatShading: true}));
+  const targetMaterial = new THREE.MeshPhongMaterial({color: 0x00FF00, flatShading: true});
+  const targetMesh = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 6, 3), targetMaterial);
   targetMesh.castShadow = true;
   targetBob.add(targetMesh);
 
@@ -157,6 +158,10 @@ function main() {
   splineObject.position.y = 0.05;
   scene.add(splineObject);
 
+  const targetPosition = new THREE.Vector3();
+  const tankPosition = new THREE.Vector2();
+  const tankTarget = new THREE.Vector2();
+
   function render(time) {
     time *= 0.001;
     
@@ -165,15 +170,31 @@ function main() {
       camera.aspect = canvas.clientWidth / canvas.clientHeight;
       camera.updateProjectionMatrix();
     }
-  
+
+    //move target
+    targetOrbit.rotation.y = time * .27;
+    targetBob.position.y = Math.sin(time * 2) * 4;
+    targetMesh.rotation.x = time * 7;
+    targetMesh.rotation.y = time * 13;
+    targetMaterial.emissive.setHSL(time * 10 % 1, 1, .25);
+    targetMaterial.color.setHSL(time * 10 % 1, 1, .25);
+
+    //move tank
+    const tankTime = time * 0.05;
+    curve.getPointAt(tankTime % 1, tankPosition);
+    curve.getPointAt((tankTime + 0.01) % 1, tankTarget);
+    tank.position.set(tankPosition.x, 0, tankPosition.y);
+    tank.lookAt(tankTarget.x, 0, tankTarget.y);
     wheels.forEach((obj) => {
       obj.rotation.x = time * 3;
     });
-    cameraPivot.rotation.y = time;
+
+    // face turret at target
+    targetMesh.getWorldPosition(targetPosition);
+    turretPivot.lookAt(targetPosition);
+
     camera.lookAt(0,0,0);
-    const target_coords = new THREE.Vector3();
-    targetMesh.getWorldPosition(target_coords);
-    turretPivot.lookAt(target_coords);
+
     renderer.render(scene, camera);
   
     requestAnimationFrame(render);
