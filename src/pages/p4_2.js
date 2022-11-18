@@ -25,14 +25,11 @@ function main() {
     return new THREE.PerspectiveCamera(fov, aspect, near, far);
   }
 
-  const cameraPivot = new THREE.Object3D();
-
-
   const camera = makeCamera();
   camera.position.set(8, 4, 10).multiplyScalar(3);
   camera.lookAt(0,0,0);
-  cameraPivot.add(camera);
   const scene = new THREE.Scene();
+  scene.add(camera);
 
   {
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -58,9 +55,6 @@ function main() {
     scene.add(light);
   }
 
-  const objects = [];
-
-
   const groundMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(50, 50), new THREE.MeshPhongMaterial({color: 0x9b7653}));
   groundMesh.rotation.x = -Math.PI / 2;
   groundMesh.receiveShadow = true;
@@ -73,6 +67,12 @@ function main() {
   bodyMesh.position.y = 1.4;
   bodyMesh.castShadow = true;
   tank.add(bodyMesh);
+
+  const tankCamera = makeCamera(75);
+  tankCamera.rotation.y = Math.PI;
+  tankCamera.position.z = -6;
+  tankCamera.position.y = 3;
+  bodyMesh.add(tankCamera);
   
   const wheels = []
 
@@ -109,8 +109,9 @@ function main() {
   turretMesh.castShadow = true;
   turretPivot.add(turretMesh);
 
-  const turretCamera = makeCamera();
-  turretCamera.position.y = .75 * .2;
+  const turretCamera = makeCamera(50);
+  turretCamera.position.y = 0;
+  turretCamera.position.z = -0.5;
   turretMesh.add(turretCamera);
 
   const targetOrbit = new THREE.Object3D();
@@ -162,13 +163,23 @@ function main() {
   const tankPosition = new THREE.Vector2();
   const tankTarget = new THREE.Vector2();
 
+  const cameras = []
+  function addCamera(cam, desc) {
+    cameras.push({"cam": cam, "desc": desc});
+  }
+
+  addCamera(camera, "detached camera");
+  addCamera(turretCamera, "on turret looking at target");
+  addCamera(targetCamera, "on target looking at tank");
+  addCamera(tankCamera, "above back of the tank");
+
   function render(time) {
     time *= 0.001;
-    
+    const local_cam = tankCamera;
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;
-      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      camera.updateProjectionMatrix();
+      local_cam.aspect = canvas.clientWidth / canvas.clientHeight;
+      local_cam.updateProjectionMatrix();
     }
 
     //move target
@@ -193,9 +204,12 @@ function main() {
     targetMesh.getWorldPosition(targetPosition);
     turretPivot.lookAt(targetPosition);
 
-    camera.lookAt(0,0,0);
+    turretCamera.lookAt(targetPosition);
 
-    renderer.render(scene, camera);
+    tank.getWorldPosition(targetPosition);
+    targetCameraPivot.lookAt(targetPosition);
+
+    renderer.render(scene, local_cam);
   
     requestAnimationFrame(render);
   }
