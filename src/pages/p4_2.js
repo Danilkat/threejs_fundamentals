@@ -173,13 +173,20 @@ function main() {
   addCamera(targetCamera, "on target looking at tank");
   addCamera(tankCamera, "above back of the tank");
 
+  const info_elem = document.querySelector("#info");
+
   function render(time) {
     time *= 0.001;
-    const local_cam = tankCamera;
+    const camera_obj = cameras[(time * 0.25) % cameras.length | 0];
+    const local_cam = camera_obj.cam;
+    info_elem.textContent = camera_obj.desc;
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;
-      local_cam.aspect = canvas.clientWidth / canvas.clientHeight;
-      local_cam.updateProjectionMatrix();
+      cameras.forEach((obj) => {
+        obj = obj.cam;
+        obj.aspect = canvas.clientWidth / canvas.clientHeight;
+        obj.updateProjectionMatrix();
+      })
     }
 
     //move target
