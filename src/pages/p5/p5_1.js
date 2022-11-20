@@ -14,12 +14,20 @@ function resizeRendererToDisplaySize(renderer) {
 }
 
 const matTypes = {
-  "Basic": new THREE.MeshBasicMaterial({color: "cyan"}),
+  "Basic": new THREE.MeshBasicMaterial({color: "cyan", emissive: "#002a2a"}),
   "Lambert": new THREE.MeshLambertMaterial({color: "cyan", emissive: "#002a2a"}),
   "Phong": new THREE.MeshPhongMaterial({color: "cyan", emissive: "#002a2a"}),
   "Toon": new THREE.MeshToonMaterial({color: "cyan", emissive: "#002a2a"}),
   "Standard": new THREE.MeshStandardMaterial({color: "cyan", emissive: "#002a2a"}),
   "Physical": new THREE.MeshPhysicalMaterial({color: "cyan", emissive: "#002a2a"}),
+  "Depth": new THREE.MeshDepthMaterial(),
+  "Normal": new THREE.MeshNormalMaterial(),
+}
+
+const sideTypes = {
+  "Front": THREE.FrontSide,
+  "Back": THREE.BackSide,
+  "Double": THREE.DoubleSide
 }
 
 class MaterialTypesHelper {
@@ -53,6 +61,8 @@ class MaterialParametersHelper {
     this._metalness = 0;
     this._clearCoat = 0;
     this._clearCoatRoughness = 0;
+    this._side = THREE.FrontSide;
+    this._flatShading = false;
 
   }
   get shininess() {
@@ -100,18 +110,43 @@ class MaterialParametersHelper {
       this._clearCoatRoughness = v;
     }
   }
+  get side() {
+    return this._side;
+  }
+  set side(v) {
+    v = parseFloat(v);
+    this.helper.mesh.material.side = v;
+    this._side = v;
+  }
+  get flatShading() {
+    return this._flatShading;
+  }
+  set flatShading(v) {
+    this.helper.mesh.material.flatShading = v;
+    this._flatShading = v;
+  }
 
 }
 
 class SphereSegmentsHelper {
   constructor(obj) {
     this.obj = obj;
+    this._segments = 3;
+    this._philen = Math.PI * 2;
   }
-  get value() {
-    return this.obj.geometry.parameters["widthSegments"];
+  get segments() {
+    return this._segments;
   }
-  set value(v) {
-    this.obj.geometry = new THREE.SphereGeometry(1, v, v);
+  set segments(v) {
+    this.obj.geometry = new THREE.SphereGeometry(1, v, v, 0, this._philen);
+    this._segments = v;
+  }
+  get philen() {
+    return this._philen;
+  }
+  set philen(v) {
+    this.obj.geometry = new THREE.SphereGeometry(1, this._segments, this._segments, 0, v);
+    this._philen = v;
   }
 }
 
@@ -131,8 +166,6 @@ function main() {
   camera.lookAt(5, 0, 0);
 
   const scene = new THREE.Scene();
-
-  const objects = [];
   
   const sphereGeometry = new THREE.SphereGeometry(1, 16, 16);
 
@@ -147,14 +180,22 @@ function main() {
   }
 
   const matTypesHelper = new MaterialTypesHelper(sphereMesh);
-  gui.add(matTypesHelper, "value", ["Basic", "Lambert", "Phong", "Toon", "Standard", "Physical"])
+  const matParamsHelper = new MaterialParametersHelper(matTypesHelper);
+  gui.add(matTypesHelper, "value", ["Basic", "Lambert", "Phong", "Toon", "Standard", "Physical", "Depth", "Normal"])
     .name("Material type")
     .onChange(updateMaterial);
+
+  gui.add(matParamsHelper, "side", sideTypes).name("Side type")
+    .onChange(updateMaterial);
   
-  gui.add(new SphereSegmentsHelper(sphereMesh), "value", 3, 64, 1)
+  const sphereSegHelper = new SphereSegmentsHelper(sphereMesh);
+  gui.add(sphereSegHelper, "segments", 3, 64, 1)
     .name("Sphere segments");
 
-    const matParamsHelper = new MaterialParametersHelper(matTypesHelper);
+  gui.add(sphereSegHelper, "philen", 0, Math.PI*2)
+    .name("Sphere cut");
+
+  gui.add(matParamsHelper, "flatShading").onChange(updateMaterial);
   gui.add(matParamsHelper, "shininess", 0, 100);
   gui.add(matParamsHelper, "roughness", 0, 1);
   gui.add(matParamsHelper, "metalness", 0, 1);
