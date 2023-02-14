@@ -30,11 +30,42 @@ const sideTypes = {
   "Double": THREE.DoubleSide
 }
 
+class parameterListHelper {
+  
+  constructor() {
+    this.list = {one: {roughness: 0,
+      metalness: 1,
+       clearcoat: 1,
+        clearcoatRoughness: 0}, 
+        two: {
+         roughness: 0.75,
+      metalness: 0.5,
+       clearcoat: 0.6,
+        clearcoatRoughness: 1
+        }}
+    this._curr = 'init'
+    this._val = this.list[this._curr]
+    
+  }
+
+  set type(v) {
+    this._curr = v;
+      if (v in this.list) {
+          this._val = this.list[this._curr];
+      }
+  }
+
+  get type() {
+      return this._curr;
+  }
+
+}
+
 class MaterialTypesHelper {
   constructor(mesh) {
     this._mesh = mesh;
     this.matTypes = matTypes;
-    this.matType = "Basic";
+    this.matType = "Physical";
     this._mesh.material = this.matTypes[this.matType];
   }
   get value() {
@@ -179,9 +210,23 @@ function main() {
     sphereMesh.material.needsUpdate = true;
   }
 
+  const userDefinedUniforms = ['roughness', 'metalness', 'clearcoat', 'clearcoatRoughness'];
+  function setCloudUniforms(uniforms) {
+    userDefinedUniforms.forEach((uniform) => {sphereMesh.material[uniform] = uniforms[uniform]});
+    gui.updateDisplay();
+}
+
+  const typeHelper = new parameterListHelper();
+  gui.add(typeHelper, 'type', ['init', 'one', 'two']).onFinishChange((value) => {
+    if (value != 'init') {
+      setCloudUniforms(typeHelper._val);
+    }
+  });
+
   const matTypesHelper = new MaterialTypesHelper(sphereMesh);
   const matParamsHelper = new MaterialParametersHelper(matTypesHelper);
-  gui.add(matTypesHelper, "value", ["Basic", "Lambert", "Phong", "Toon", "Standard", "Physical", "Depth", "Normal"])
+  //gui.add(matTypesHelper, "value", ["Basic", "Lambert", "Phong", "Toon", "Standard", "Physical", "Depth", "Normal"])
+  gui.add(matTypesHelper, "value", ["Physical"])
     .name("Material type")
     .onChange(updateMaterial);
 
@@ -196,17 +241,20 @@ function main() {
     .name("Sphere cut");
 
   gui.add(matParamsHelper, "flatShading").onChange(updateMaterial);
-  gui.add(matParamsHelper, "shininess", 0, 100);
-  gui.add(matParamsHelper, "roughness", 0, 1);
-  gui.add(matParamsHelper, "metalness", 0, 1);
-  gui.add(matParamsHelper, "clearCoat", 0, 1);
-  gui.add(matParamsHelper, "clearCoatRoughness", 0, 1);
+  //gui.add(matParamsHelper, "shininess", 0, 100);
+  gui.add(sphereMesh.material, "roughness", 0, 1, 0.01);
+  gui.add(sphereMesh.material, "metalness", 0, 1, 0.01);
+  gui.add(sphereMesh.material, "clearcoat", 0, 1, 0.01);
+  gui.add(sphereMesh.material, "clearcoatRoughness", 0, 1, 0.01);
+
 
   const color = 0xFFFFFF;
   const intensity = .7;
   const light = new THREE.PointLight(color, intensity);
   scene.add(light);
   light.position.set(3, .5, .5);
+
+
 
   function render(time) {
     time *= 0.001;
