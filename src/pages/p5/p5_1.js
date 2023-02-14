@@ -33,7 +33,8 @@ const sideTypes = {
 class parameterListHelper {
   
   constructor() {
-    this.list = {one: {roughness: 0,
+    this.list = {init: {roughness: 1, metalness: 0, clearcoat: 0, clearcoatRoughness: 0},
+    one: {roughness: 0,
       metalness: 1,
        clearcoat: 1,
         clearcoatRoughness: 0}, 
@@ -43,8 +44,12 @@ class parameterListHelper {
        clearcoat: 0.6,
         clearcoatRoughness: 1
         }}
-    this._curr = 'init'
-    this._val = this.list[this._curr]
+      this.actions = null;
+
+      this._curr = 'init'
+
+      this._action = null;
+      this._val = this.list[this._curr]
     
   }
 
@@ -58,6 +63,27 @@ class parameterListHelper {
   get type() {
       return this._curr;
   }
+
+  crossFade(v) {
+    console.log(this.actions[v]);
+    console.log(v);
+    const nextAction = this.actions[v];
+
+    setWeight( nextAction, 1 );
+    nextAction.time = 0;
+
+    this._action.crossFadeTo(nextAction, 5);
+    this._action = nextAction;
+    this._curr = v;
+  }
+
+}
+
+function setWeight( action, weight ) {
+
+  action.enabled = true;
+  action.setEffectiveTimeScale( 1 );
+  action.setEffectiveWeight( weight );
 
 }
 
@@ -216,12 +242,6 @@ function main() {
     gui.updateDisplay();
 }
 
-  const typeHelper = new parameterListHelper();
-  gui.add(typeHelper, 'type', ['init', 'one', 'two']).onFinishChange((value) => {
-    if (value != 'init') {
-      setCloudUniforms(typeHelper._val);
-    }
-  });
 
   const matTypesHelper = new MaterialTypesHelper(sphereMesh);
   const matParamsHelper = new MaterialParametersHelper(matTypesHelper);
@@ -254,7 +274,38 @@ function main() {
   scene.add(light);
   light.position.set(3, .5, .5);
 
+  function createClip(roughness, metalness, clearcoat, clearcoatRoughness) {
+    const roughnessKF = new THREE.NumberKeyframeTrack('.roughness', [0], [roughness]);
+    const metalnessKF = new THREE.NumberKeyframeTrack('.metalness', [0], [metalness]);
+    const clearcoatKF = new THREE.NumberKeyframeTrack('.clearcoat', [0], [clearcoat]);
+    const clearcoatRoughnessKF = new THREE.NumberKeyframeTrack('.clearcoatRoughness', [0], [clearcoatRoughness]);
+    const clip = new THREE.AnimationClip('Action', 3, [roughnessKF, metalnessKF, clearcoatKF, clearcoatRoughnessKF]);
+    return clip;
+  }
 
+  const initClip = createClip(1.0, 0.0, 0.0, 0.0);
+  const oneClip = createClip(0, 1, 1, 0);
+  const twoClip = createClip(0.75, 0.5, 0.6, 1);
+  
+  const mixer = new THREE.AnimationMixer( sphereMesh.material );
+
+  const initAction = mixer.clipAction(initClip);
+  const oneAction = mixer.clipAction(oneClip);
+  const twoAction = mixer.clipAction(twoClip);
+  setWeight(initAction, 1);
+  setWeight(oneAction, 0);
+  setWeight(twoAction, 0);
+  initAction.play();
+  oneAction.play();
+  twoAction.play();
+
+  const typeHelper = new parameterListHelper();
+  typeHelper.actions = {init: initAction, one: oneAction, two: twoAction};
+  typeHelper._action = typeHelper.actions['init'];
+  gui.add(typeHelper, 'type', ['init', 'one', 'two']).onFinishChange((v) => {typeHelper.crossFade(v)});
+
+
+  const clock = new THREE.Clock();
 
   function render(time) {
     time *= 0.001;
@@ -267,6 +318,12 @@ function main() {
   
     sphereMesh.rotation.y = time * 0.2;
     sphereMesh.rotation.x = time * 0.2;
+    
+    const delta = clock.getDelta();
+
+    mixer.update(delta);
+
+    gui.updateDisplay();
   
     renderer.render(scene, camera);
   
