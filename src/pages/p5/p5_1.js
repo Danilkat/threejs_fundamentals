@@ -274,20 +274,21 @@ function main() {
   scene.add(light);
   light.position.set(3, .5, .5);
 
-  function createClip(roughness, metalness, clearcoat, clearcoatRoughness) {
-    const roughnessKF = new THREE.NumberKeyframeTrack('.roughness', [0], [roughness]);
-    const metalnessKF = new THREE.NumberKeyframeTrack('.metalness', [0], [metalness]);
-    const clearcoatKF = new THREE.NumberKeyframeTrack('.clearcoat', [0], [clearcoat]);
-    const clearcoatRoughnessKF = new THREE.NumberKeyframeTrack('.clearcoatRoughness', [0], [clearcoatRoughness]);
-    const clip = new THREE.AnimationClip('Action', 3, [roughnessKF, metalnessKF, clearcoatKF, clearcoatRoughnessKF]);
+  function createClip(roughness, metalness, clearcoat, clearcoatRoughness, position) {
+    const roughnessKF = new THREE.NumberKeyframeTrack('.material.roughness', [0], [roughness]);
+    const metalnessKF = new THREE.NumberKeyframeTrack('.material.metalness', [0], [metalness]);
+    const clearcoatKF = new THREE.NumberKeyframeTrack('.material.clearcoat', [0], [clearcoat]);
+    const clearcoatRoughnessKF = new THREE.NumberKeyframeTrack('.material.clearcoatRoughness', [0], [clearcoatRoughness]);
+    const positionKF = new THREE.VectorKeyframeTrack('.position', [0], [position.x, position.y, position.z]);
+    const clip = new THREE.AnimationClip('Action', 3, [roughnessKF, metalnessKF, clearcoatKF, clearcoatRoughnessKF, positionKF]);
     return clip;
   }
 
-  const initClip = createClip(1.0, 0.0, 0.0, 0.0);
-  const oneClip = createClip(0, 1, 1, 0);
-  const twoClip = createClip(0.75, 0.5, 0.6, 1);
+  const initClip = createClip(1.0, 0.0, 0.0, 0.0, new THREE.Vector3(5, 0, 0));
+  const oneClip = createClip(0, 1, 1, 0, new THREE.Vector3(5, 1, 0));
+  const twoClip = createClip(0.75, 0.5, 0.6, 1, new THREE.Vector3(5, 0, 1));
   
-  const mixer = new THREE.AnimationMixer( sphereMesh.material );
+  const mixer = new THREE.AnimationMixer( sphereMesh );
 
   const initAction = mixer.clipAction(initClip);
   const oneAction = mixer.clipAction(oneClip);
